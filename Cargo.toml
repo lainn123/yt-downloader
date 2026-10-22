@@ -1,0 +1,14 @@
+[package]
+name = "yt_downloader"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+dirs = "5.0"
+
+[profile.release]
+opt-level = 3          # Nível máximo de otimização de velocidade
+lto = true             # Link-Time Optimization (otimiza o código entre diferentes crates/módulos)
+codegen-units = 1      # Reduz unidades de código para permitir otimizações globais mais profundas
+panic = "abort"        # Remove o mecanismo de stack unwinding, gerando um binário menor e mais rápido
+strip = true           # Remove símbolos de debug do binário final, deixando-o bem leve
