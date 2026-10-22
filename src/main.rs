@@ -4,21 +4,23 @@ use std::process::Command;
 fn main() {
     loop {
         println!("\n=========================================");
-        println!("     YouTube Downloader Pro (Rust)         ");
+        println!("    YouTube Downloader Pro (Rust)         ");
         println!("=========================================");
-        println!("1. Baixar Vídeo / Áudio");
-        println!("2. Atualizar o yt-dlp");
-        println!("3. Sair");
-        print!("Escolha uma opção (1-3): ");
+        println!("1. Baixar Vídeo / Áudio (Individual)");
+        println!("2. Baixar Playlist Completa");
+        println!("3. Atualizar o yt-dlp");
+        println!("4. Sair");
+        print!("Escolha uma opção (1-4): ");
         io::stdout().flush().unwrap();
 
         let mut opcao_menu = String::new();
         io::stdin().read_line(&mut opcao_menu).expect("Falha ao ler opção");
 
         match opcao_menu.trim() {
-            "1" => iniciar_download(),
-            "2" => atualizar_ytdlp(),
-            "3" => {
+            "1" => iniciar_download(false), // false = vídeo individual
+            "2" => iniciar_download(true),  // true = playlist completa
+            "3" => atualizar_ytdlp(),
+            "4" => {
                 println!("\nA encerrar o programa. Até logo!");
                 break;
             }
@@ -27,8 +29,9 @@ fn main() {
     }
 }
 
-fn iniciar_download() {
-    print!("\nDigite ou cole a URL do vídeo: ");
+fn iniciar_download(e_playlist: bool) {
+    let tipo_str = if e_playlist { "da playlist" } else { "do vídeo" };
+    print!("\nDigite ou cole a URL {}: ", tipo_str);
     io::stdout().flush().unwrap();
 
     let mut url = String::new();
@@ -62,12 +65,22 @@ fn iniciar_download() {
         cmd.arg("--paths").arg(".");
     }
 
+    // Configura se deve baixar a playlist inteira ou apenas o vídeo isolado
+    if e_playlist {
+        cmd.arg("--yes-playlist");
+        // Se quiser que os vídeos da playlist fiquem numa pasta própria, 
+        // deskomente a linha abaixo:
+        // cmd.arg("-o").arg("%(playlist)s/%(title)s.%(ext)s");
+    } else {
+        cmd.arg("--no-playlist");
+    }
+
     // Ativa o download acelerado em 8 conexões paralelas
     cmd.arg("-N").arg("8");
 
     match formato_escolha.trim() {
         "2" => {
-            println!("\n🎥 Baixando vídeo no formato MKV...");
+            println!("\n🎥 Baixando no formato MKV...");
             cmd.arg("-f").arg("bv*+ba/b")
                .arg("--merge-output-format").arg("mkv");
         }
@@ -80,7 +93,7 @@ fn iniciar_download() {
                .arg("--embed-thumbnail");
         }
         _ => {
-            println!("\n🎥 Baixando vídeo no formato MP4...");
+            println!("\n🎥 Baixando no formato MP4...");
             cmd.arg("-f").arg("bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4] / bv*+ba/b")
                .arg("--merge-output-format").arg("mp4");
         }
@@ -90,7 +103,7 @@ fn iniciar_download() {
 
     match cmd.status() {
         Ok(status) if status.success() => {
-            println!("\n✅ Download concluído! O arquivo foi salvo na sua pasta padrão de Downloads.");
+            println!("\n✅ Download concluído! Os arquivos foram salvos na sua pasta padrão de Downloads.");
         }
         _ => {
             println!("\n❌ Ocorreu um erro durante o download.");
